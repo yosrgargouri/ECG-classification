@@ -1,0 +1,4 @@
+Mean,Standard_Deviation,Skewness,Variance,Etat
+25.6558,155.5168,3.0410,2.4185e+04,N
+
+

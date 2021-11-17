@@ -1,0 +1,826 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+
+\usepackage{graphicx,url}
+
+%\usepackage[brazil]{babel}   
+\usepackage[latin1]{inputenc}  
+
+\renewcommand\figurename{Figura}
+\renewcommand\tablename{Tabela}
+\def\refname{Referências}
+     
+\sloppy
+
+\title{Classificação de Arritmias Cardíacas utilizando Transformada \textit{Wavelets} e Treinamento Supervisionado por meio de extração de características}
+
+\author{Davi Shinji Mota Kawasaki\inst{1}, Matheus Ferreira Flausino\inst{2}}
+
+
+\address{Departamento da Computação -- Universidade Tecnológica Federal do Paraná
+  (UTFPR)\\
+  Cornélio Procópio -- PR -- Brazil
+  \nextinstitute
+  Departamento da Computação -- Universidade Tecnológica Federal do Paraná
+  (UTFPR)\\
+  Cornélio Procópio -- PR -- Brazil
+  \email{kawasaki@alunos.utfpr.edu.br,
+		 matheusflausino@alunos.utfpr.edu.br}
+}
+
+\begin{document} 
+
+\maketitle
+
+\begin{abstract}
+  This work aims to extract and classify ventricular cardiac arrhythmias through \textit{Wavelet Transform} and machine learning algorithms. The article covers a brief theorical introduction about the medical theme, highlights the extraction window and filter methods, and then train the extracted data through machine learning classifiers. After that, it shows and compares the results with two machine learning distinct softwares, such as \textit{WEKA} and \textit{MATLAB}.
+\end{abstract}
+     
+\begin{resumo} 
+  O objetivo desse artigo consiste em apresentar extração e classificação de arritmias cardíacas ventriculares por meio de Transformadas \textit{Wavelet} e classificadores de aprendizado de máquina. O artigo repassa uma breve introdução teórica sobre o tema médico, ressalta os métodos de janelamento e filtro, para então mostrar a realização e resultados do treinamento por meio dos classificadores com as características extraídas. Por fim, demonstra e compara os resultados com dois \textit{softwares} distintos: \textit{WEKA} e \textit{MATLAB}.
+\end{resumo}
+
+
+\section{Introdução} \label{sec:introduction}
+
+O ser humano, desde as épocas antigas, tem passado por inúmeras evoluções, assim como também por vários obstáculos pessoais, biológicos e sociais. Os contextos históricos detalham com maestria cada ponto focal característico dentre a história humana milenar, seja pelas conquistas, descobertas, guerras, expansões populacionais e, principalmente, as evoluções e revoluções marcantes.
+
+Nesses contextos sociais, uma \textit{"persona"} sempre esteve presente dentre os momentos históricos humanos, marcando presença principalmente em fatos históricos globais. As enfermidades e doenças produziram significados que iam além das características biológicas - como foi o caso da peste negra -, demonstrando que, além de soluções médicas-científicas, eram necessários investigações socioculturais \cite{barata:06}.
+
+Com estimativas da Organização das Nações Unidas (ONU) de que a Terra terá pouco mais de 9 bilhões de habitantes em 2050, a preocupação com enfermidades tem se tornado um tópico cada vez mais alarmante globalmente. De acordo com pesquisas da FAO 1999 e UNICEF 2002, cerca de 18 milhões de seres humanos têm morrido precocemente de doenças curáveis - equivalente a possíveis 50 mil mortes que poderiam ser evitadas diariamente. Além disso, problemas médicos que causam essas doenças aplicam uma grande tensão econômica principalmente em países subdesenvolvidos, intensificando a pobreza e o nível da população doente \cite{pogge:05}.
+
+Entre essas várias doenças, as ocasionadas por insuficiências cardíacas e/ou infartos são razões da morte de aproximadamente 17,5 milhões de pessoas por ano no mundo \cite{whf:02}. Segundo a Federação Mundial do Coração (FMC) esses dados demonstram que infartos derivados de problemas cardíacos são uma das principais causas de mortalidade no mundo. A ONG FMC destacou que 80\% dessas mortes ocorrem em países com nível de renda médio e baixo \cite{whf:02}, caso do Brasil.
+
+O número de infartos e doenças cardíacas vem aumentando devido a alguns fatores gerais, como o sedentarismo, má qualidade da alimentação, estresse, além de outros problemas comuns na cultura de um mundo capitalista globalizado \cite{beckert:09}.
+
+Para reduzir a quantidade de óbitos consequentes de doenças, profissionais da área da saúde têm investido em ferramentas que possam completar os diagnósticos - sejam de prevenção ou até mesmo emergenciais. Essa antecipação de descoberta de alguma doença - como disfunções cardíacas - podem determinar tratamentos médicos e até mesmo evitar mortes súbitas de pacientes.
+
+Com o crescimento do número de pacientes dentre a volumosa população mundial, cada vez mais métodos automáticos de diagnósticos são necessários para auxiliar os médicos. Um dos caminhos para este diagnóstico, no caso de exames cardiológicos, consiste na utilização do sinal de eletrocardiograma (ECG). A alteração e distúrbios das ondas do ECG podem indicar alterações do ritmo cardíaco, também denominadas como arritmias cardíacas \cite{beckert:09}, objetivo principal de análise desse artigo. Essas alterações do ritmo cardíaco normalmente são coletadas de forma analógica, ou seja, por análise gráfica visual por profissionais especialistas, o que torna a tarefa extremamente manual e não replicável.
+
+Sob essa análise contextual, esse trabalho propõe formular um algoritmo que seja capaz de detectar, analisar e classificar automaticamente essas arritmias cardíacas. Conforme a análise literária \cite{beckert:09}, algoritmos que realizam esse trabalho dificilmente alcançam taxas de 100\% de acerto. Para ultrapassar essa barreira, um método será desenvolvido para analisar o sinal de ECG, extrair características relevantes do mesmo e, por fim, classificar cada um dos sinais por dois tipos de Aprendizado de Máquina: Redes Neurais, Árvores de Decisão, Redes Bayesianas, Vizinhos Mais Próximos e Máquina de Vetores de Suporte. Os sinais serão obtidos diretamente da base de dados \textit{MIT-BIH} - \textit{Arrhythmia Database}, e o foco de classificação dessa base serão sinais de ECG normais ou possuidor de um dos três tipos de arritmias ventriculares: Taquicardia Ventricular (VT), Bigeminismo Ventricular (B) e Trigeminismo Ventricular (T).
+
+Por meio da normalização e filtro dos sinais, pretende-se avaliar os resultados através da taxa de acurácia do aprendizado de máquina com os \textit{softwares} \textit{WEKA} e \textit{MATLAB}, além de analisar a contribuição da extração dos resultados no resultado do aprendizado de máquina, comparando o resultado entre as duas ferramentas escolhidas. 
+
+O trabalho, portanto, é dividido em: Introdução, Fundamentação Teórica, Metodologia, Extração de Características, Treinamento com Aprendizado de Máquina, Resultados e Discussões, Conclusão.
+
+\section{Fundamentação Teórica} \label{sec:theory}
+
+\subsection{Coração}
+
+O coração consiste em um órgão localizado atrás da caixa toráxica, na parte central do peito entre o pulmão direito e esquerdo \cite{nih:11}. Sua função consiste no batimento ou contração para bombeamento do sangue para todo o corpo por meio de um sistema de vasos sanguíneos \cite{gray:79}.
+
+Para realizar o processo de bombeamento de sangue, o coração depende da sua seção direita e esquerda, onde cada uma delas possui duas cavidades: átrio e ventrículo, sendo a primeira superior e a segunda inferior. O fluxo do sangue é realizado por meio de válvulas entre o átrio e o ventrículo, sempre seguindo a direção do primeiro para o segundo.
+
+Por meio dessas válvulas é possível realizar o processamento do oxigênio e do gás carbônico, onde a seção esquerda do coração é responsável pelo envio de sangue com oxigênio para o corpo, enquanto a direita cuida do recebimento do sangue com gás carbônico de diferentes partes do corpo \cite{nih:11}. A cada contração de cada câmara do miocárdio - fluxo de sangue entre o átrio e o ventrículo - acontece o evento chamado de sístole, enquanto no relaxamento ocorre a diástole - processo o qual é repassado para o pulmão para realização da troca de gases \cite{nih:11}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=3in]{img/coracaoEsquematico}
+	\caption{Representação interna do coração e suas cavidades.}
+	\label{coracaoEsquematico}
+\end{figure}
+
+Uma das estruturas internas primordiais para determinar o ritmo do coração chama-se nódulo sinoatrial (SA), ou também chamado de marca-passo. Localizada entre o átrio direito e a veia cava superior (vide Figura \ref{coracaoEsquematico}), ele atua controlando a frequência dos batimentos cardíacos, com cerca de 72 contrações por minuto. Por ter uma frequência alta, seus impulsos se espalham para os átrios e ventrículos, excitando todas as áreas e determinando o ritmo de batimento de quase todo o coração  \cite{guyton:06}.
+
+O coração, por meio do seu batimento, realiza vários eventos cardíacos chamados de ciclos cardíacos, começando pela geração de um potencial de ação propagado pelos átrios até chegar nos ventrículos. Esse ciclo cardíaco vai conter o relaxamento pela diástole (coração enche de sangue) e a sístole (contração das câmaras de bombeamento). Conforme representado pelos traçados da Figura \ref{eventosCicloCardiaco}, pode-se visualizar os períodos de pressão (mm Hg), volume (ml), eletrocardiograma e fonocardiograma, sendo o penúltimo a representação gráfica utilizada nesse trabalho para classificação de arritmias.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/eventosCicloCardiaco}
+	\caption{Eventos do ciclo cardíaco representados por diferentes traçados no ventrículo esquerdo.}
+	\label{eventosCicloCardiaco}
+\end{figure}
+
+\subsection{Eletrocardiograma (ECG)}
+
+Conforme visualizado no tópico anterior, o nódulo sinoatrial (SA) determina o ritmo do coração por seus impulsos com uma frequência alta. A partir dessa excitação, ocorre paralelamente a propagação de correntes do campo elétrico no músculo cardíaco e nos tecidos das regiões vizinhas, inclusive atingindo a superfície do corpo. Como esse fluxo ocorre entre diversos locais do corpo, pode-se captar diferenças de potenciais por meio de eletrodos na pele, em pontos opostos do coração. Essas medidas podem ser coletadas por meio de 12 derivações clássicas, normalmente se baseando pelo triângulo de Einthoven, representado pela Figura \ref{trianguloEinthoven}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=3in]{img/trianguloEinthoven}
+	\caption{Representação do triângulo de Einthoven, com eletrodos sobre os pulsos (RA e LA) e no tornozelo esquerdo (LL).}
+	\label{trianguloEinthoven}
+\end{figure}
+
+Por meio de um amplificador, esses potenciais são adquiridos por um período de tempo, em localizações conforme estabelecidas pelas derivações. Esse processo trata-se da eletrocardiografia, também conhecida como o exame de eletrocardiograma (ECG), apresentando a excitação cardíaca de forma gráfica para análise patológica por um cardiologista. Esse exame de baixo custo permite a análise de uma cardiopatia/arritmia no momento de ocorrência da mesma, analisando normalmente os segmentos, intervalos e ondas do sinal de ECG.
+
+Um registro de ECG, representado na Figura \ref{eletrocardiogramaIntervalos}, é representado por meio da voltagem plotada no eixo y pelo tempo no eixo x, onde seu sinal traduz o registro das despolarizações e repolarizações por meio de cinco etapas, representadas pelos formatos de onda P, Q, R, S e T \cite{mello:91}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=3in]{img/eletrocardiogramaIntervalos}
+	\caption{Registro de eletrocardiograma com diferentes tipos de intervalos.}
+	\label{eletrocardiogramaIntervalos}
+\end{figure}
+
+Além dos formatos de onda, o ECG apresenta alguns subperíodos que são importantes para uma análise mais detalhada das cardiopatias, como o intervalo entre a onda P e R, o qual representa o tempo de condução do estímulo através do nódulo atrioventricular; e o complexo QRS, que representa a despolarização ventricular. A partir desses subperíodos pode-se analisar as morfologias do exame, denominadas pela sequência de excitação e recuperação, respectivamente caracterizados pela despolarização e repolarização por meio da
+diferença de potencial resultante, conforme representado pela Figura \ref{sequenciaDespolarizacacoPolarizacao}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/sequenciaDespolarizacacoPolarizacao}
+	\caption{Sequência de despolarização e repolarização com a representação das ondas e subperíodos.}
+	\label{sequenciaDespolarizacacoPolarizacao}
+\end{figure}
+
+Estas morfologias permitem a verificação de anormalidades no sistema de condução cardíaca, como as arritmias que vão ser classificadas por meio de aprendizado de máquina nesse trabalho.
+
+\subsection{Arritmias}
+
+Conforme apresentado, os exames de ECG permitem identificar anormalidades no sistema cardiológico, podendo representar diferentes cardiopatias. Elas podem ser sintomaticamente representadas por arritmias cardíacas, que ocorrem por alterações na formação/condução do impulso elétrico através do miocárdio \cite{sbc:03}. O ECG é um dos principais exames para estudo e análise das arritmias, justamente porque as mesmas podem modificar a origem/difusão fisiológica do estímulo elétrico, alterando o ritmo cardíaco normal \cite{goncalves:95}.
+
+Dentre os mais diversos tipos de classificação de arritmias, elas podem ser divididas em duas categorias (assintomáticas e sintomáticas) e em dois grupos de frequência: bradicardia - frequência cardíaca menor que 60 batimentos por segundo, e taquicardia - frequência cardíaca maior que 100 batimentos por segundo \cite{guyton:06}.
+
+O enfoque desse trabalho reside nas arritmias que ocorrem na parte ventricular do batimento cardíaco, como as seguintes: Taquicardia Ventricular (VT), Bigeminismo Ventricular (B) e Trigeminismo Ventricular (T).
+
+A taquicardia acontece quando a frequência cardíaca é maior que 100 batimentos por minuto. Ao realizar esforços físicos sua ocorrência é considerada normal, porém após alguns minutos depois do término da atividade física, a frequência cardíaca deve se restabelecer ao nível saudável \cite{beckert:09}. Quando isso não acontece ou se em repouso apresenta-se taquicardia, isto pode indicar a existência de alguma patologia, como a taquicardia ventricular representada pela Figura \ref{ecgTaquicardiaVentricular}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=5in]{img/ecgTaquicardiaVentricular}
+	\caption{Exemplo de ECG com Taquicardia Ventricular.}
+	\label{ecgTaquicardiaVentricular}
+\end{figure}
+
+Já os casos de Bigeminismo e Trigeminismo ocorrem por contrações ventriculares prematuras (PVC), onde cada PVC é seguido por uma pausa compensatória que permite que o nódulo sinoatrial descanse no ciclo, conforme representado na Figura \ref{arritmiaBigeminismoTrigeminismo}. Enquanto no bigeminismo um PVC ocorre em todas as outras batidas de forma constante, o trigeminismo consiste em um PVC ocorrendo somente na terceira batida, onde aparece uma pausa compensatória após essa batida \cite{wanderer:09}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/arritmiaBigeminismoTrigeminismo}
+	\caption{Exemplo de ECG com Bigeminismo e Trigeminismo Ventricular.}
+	\label{arritmiaBigeminismoTrigeminismo}
+\end{figure}
+
+\subsection{Extração do Sinal com Janelamento}
+
+O tratamento de sinais normalmente envolve um conjunto grande e finito de dados, os quais devem ser tratados para realização de uma extração e sintetização adequada. Em alguns casos, principalmente envolvendo uma extração de dados com \textit{Transformada Rápida de Fourier (FFT)}, a aquisição pode resultar em sinais com transições abruptas, também conhecidas como descontinuidades \cite{ni:16}. 
+
+No caso dos ECGs, os sinais possuem vários batimentos no período de 30 minutos da base de dados, onde cada tipo de batimento de arritmia ocorre em alguns momentos específicos pelo sinal. Sendo assim, sabendo cada período específico através de anotações provenientes da base de dados do MIT-BIH, a técnica de janelamento se torna útil, permitindo um enfoque específico da onda completa a ser analisada, além de minimizar possíveis margens de transição como as descontinuidades, reduzindo a perda espectral do sinal \cite{ni:16}.
+
+\subsection{Processamento do Sinal com Transformadas \textit{Wavelets}}
+A \textit{Wavelet} trata-se de uma função que descreve e decompõe outras funções no domínio da frequência, garantindo a análise além do domínio do tempo. A sua decomposição acontece por meio da Transformada \textit{Wavelet}, que trata de uma técnica por dimensão de janela variável, avaliando o sinal no espaço tempo x frequência e os componentes espectrais em um intervalo de tempo \cite{graps:95}.
+
+Por trabalhar com janelas, a Transformada \textit{Wavelet} permite que ocorra o translado no tempo se baseando em \textit{Wavelets}-mãe, a qual se fornece como protótipo para todas janelas criadas no procedimento de análise do sinal \cite{graps:95}.
+
+Por permitir a decomposição do sinal em várias funções no domínio do tempo e frequência, essa transformada possui uma grande abrangência para análise e compreensão de sinais, podendo inclusive ser dividida em contínua e discreta.
+
+Na Transformada \textit{Wavelet} Contínua (TWC) a variável translação representa o deslocamento da janela de amostragem ao longo do tempo, sendo matematicamente definida em F(a,b):
+
+\[ 	F(a,b) = \int^{+\infty}_{-\infty} f(t)\Psi_{a,b} dt \]
+
+Cada sinal pode determinar um tipo de \textit{Wavelet}-mãe que pode ser utilizado por uma TWC, como os representados na Figura \ref{waveletContinuaFamilias}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/waveletContinuaFamilias}
+	\caption{Famílias de TWC: (a) Daubechies; (b) Coiflet; (c) Haar; (d) Symmlet.}
+	\label{waveletContinuaFamilias}
+\end{figure}
+
+A Transformada \textit{Wavelet} Discreta (TWD) permite não perder suas qualidades e propriedades, portando-se de maneira numericamente estável e com uma menor redundância de informação \cite{silva:06}. A sua realização acontece por meio de filtragens digitais sucessivas sobre o sinal
+original, onde um par de filtros digitais definidos como filtros em quadratura é descrito pelas funções h(n) e g(n), sendo estas, respectivamente, as funções resposta ao impulso de um filtro passa-baixa e passa-alta, cada um com metade da banda do sinal original \cite{castelano:06}. Ela é matematicamente definida em $F_{m,n}(a,b)$:
+
+\[ 	F_{m,n}(a,b) = a_{0}^{-j/2}\int f(t)\Psi (a_{0}^{-j}t - nb_{0}) \]
+
+\subsection{Classificação de Sinais}
+Como o objetivo do trabalho consiste na análise e classificação de arritmias por meio de Aprendizado de Máquina, faz-se necessário realizar a extração das características dos sinais para poder classificar com um certo grau de confiabilidade por meio de algum algoritmo de inteligência artificial.
+
+O primeiro passo necessário para a classificação de sinais se encontra na normalização do sinal de ECG afim de obter e tratar pedaços de amostras obtidas do sinal. Para realizar esse processo utilizam-se diversos tipos de funções matemáticas, selecionando as amostras filtradas - por janelamento e DWT com extração dos coeficientes, por exemplo - ou através de extração de características diretas do sinal, como o intervalo RR e frequência cardíaca.
+
+\subsection{Aprendizado de Máquina}
+
+O aprendizado de máquina se caracteriza por ser um subcampo dentro de toda a inteligência artificial, e tem o objetivo de desenvolver algoritmos e técnicas que permitam os computadores adquirirem conhecimento sem serem explicitamente programados. Dado um conjunto de amostras cujo tenha classificação conhecida, a máquina conseguem interpretar os dados e classificá-los, aprendendo com seus erros \cite{morellato:08}. As técnicas do aprendizado de máquina podem ser aplicadas em diversas áreas do conhecimento, como em problemas relacionados a computação, biologia, química e matemática \cite{morellato:08}.
+
+Os algoritmos de aprendizados de máquinas podem ser divididos em dois principais tipos: os supervisionados e não supervisionados. O aprendizado de máquina supervisionado trata de amostras no qual foram fornecidas uma referência do objetivo, disponibilizando para o computador informações a respeito do ambiente em que as amostras pertencem \cite{marr:17}. Neste tipo de aprendizado, em cada amostra é fornecida variáveis de entrada e a saída esperada, também chamada de \textit{true label}. Ao final do treinamento, é esperado que a máquina seja capaz de fornecer saídas corretas para entradas que nunca foram apresentadas. O aprendizado de máquina não supervisionado não contém o \textit{true label}, tendo amostras compostas apenas pelas variáveis de entrada. Com isso, os algoritmos não supervisionadas tentam encontrar padrões nas amostras fornecidas, separando-as em grupos \cite{marr:17}.
+
+\section{Metodologia}
+
+A partir da proposta e fundamentação teórica apresentada, pode-se determinar quais ferramentas utilizadas e qual metodologia empregada no projeto. 
+
+O projeto foi desenvolvido em duas etapas: primeiro a aplicação do tratamento do sinal para extração de novas características, e depois o treinamento das arritmias por aprendizado de máquina.
+
+O objetivo do tratamento do sinal foi isolar partes do sinal do ECG por janelamento para, consequentemente, conseguir aplicar \textit{Transformadas Wavelets Discretas} para filtro e redução de ruídos. Através do \textit{software MATLAB}, o janelamento de períodos do sinal foi realizado através de arquivos de anotações da base de dados de arritmia, as quais possuíam exatos períodos de tempo onde a arritmia a ser verificada ocorria.
+
+A partir do sinal normalizado e tratado, realizou-se a extração de seis características, sendo três delas referentes ao paciente (sexo, idade, ingestão de medicação) e as outras três, cardíacas (amplitude da onda R em milivolts, intervalo de tempo entre ondas R em segundos, velocidade do pico da onda R em mV/s). Esses dados foram extraídos em arquivos do tipo \textit{CSV} juntamente com um \textit{true label}, variável a qual caracteriza o tipo de arritmia.
+
+Com os arquivos contendo as características extraídas dos sinais normalizados, realizou-se o \textit{split} das amostras em na proporção de 80\% das amostras para treinamento e 20\% para teste. Com isso, foi possível realizar o aprendizado de máquina com os \textit{softwares WEKA} e \textit{MATLAB}. Para a grande maioria dos classificadores o processo foi realizado nas duas ferramentas, comparando os resultados obtidos em treinamento e teste.
+
+Todo o código desenvolvido e resultados obtidos apresentados nesse trabalho podem ser acessados através do repositório aberto utilizado no \textit{Github} \cite{kawasaki:17}.
+
+\section{Extração de Características}
+
+Conforme apresentado no tópico anterior, a normalização de sinal e extração de características foram realizadas através do \textit{software MATLAB}. Essa etapa foi fundamental para que fosse utilizado um algoritmo modular e completo, capaz de realizar desde o janelamento do sinal até a extração das características para o treinamento com aprendizado de máquina, o qual será detalhado no próximo tópico.
+
+Para uma melhor compreensão desse algoritmo, é necessário compreender o funcionamento da base de dados de arritmia do MIT-BIH. A base conta com 48 amostras de diferentes pessoas, sendo que cada uma das amostras possui uma duração de aproximadamente 30 minutos e com janelas aleatórias de diferentes tipos de arritmias. Para cada amostra é possível realizar a extração de vários tipos de arquivos, onde nesse trabalho quatro tipos foram analisados: extração do sinal com uma faixa (potencial MLII, derivado do tipo V2) em um arquivo .mat; extração de informações do sinal completo em um arquivo .info; extração das informações básicas de saúde do paciente em um arquivo de cabeçalho .hea; por fim, extração de detalhes de cada período de sinal com os tipos de arritmias - provenientes de considerações de profissionais cardiologistas - em um arquivo .txt. Um exemplo do arquivo de anotações pode ser visualizado através da Figura \ref{ecgSignalAnnotationsExample}, onde é possível visualizar uma arritmia do tipo Bigeminismo (B no período 0:00.186 ou na amostra 67 do sinal.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/ecgSignalAnnotationsExample}
+	\caption{Exemplo de anotações extraídas do sinal ECG 100m dentro do site da Physionet ATM.}
+	\label{ecgSignalAnnotationsExample}
+\end{figure}
+
+Com os 4 arquivos de 17 amostras de sinais foi possível realizar a normalização e extração das 3 arritmias propostas através de algumas etapas realizadas no \textit{MATLAB} para cada uma das 17 amostras:
+
+1. A primeira etapa consistiu em carregar cada um dos 17 sinais de ECG, extraindo os valores elétricos em amplitude e tempo, além da frequência, quantidade de amostras e tempo total do sinal.
+
+2. Em seguida, realizou-se a leitura do arquivo de anotações dos sinais, capturando em um objeto de vetores os períodos e tempos das amostras da arritmia escolhida para extração.
+
+3. Com cada um dos períodos específicos das arritmias, foi possível realizar o janelamento da parte QRS de cada onda, capturando um intervalo de tempo anterior e posterior a amostra de tempo da arritmia extraída na etapa anterior. 
+
+4. Após a extração do sinal em amplitude e tempo em um objeto de vetores do janelamento, realiza-se a plotagem de cada sinal QRS extraído, exceto para casos sem arritmia - chamados de \textit{Normal Sinus Rhythm (N)}. Uma extração do janelamento da parte QRS do arquivo 201m pode ser visualizada na Figura \ref{signalQRSExtractedTrigeminy}, onde foi extraída arritmia Trigeminismo Ventricular.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/signalQRSExtractedTrigeminy}
+	\caption{Sinal QRS de Trigeminismo Ventricular extraído por janelamento do arquivo 201m.}
+	\label{signalQRSExtractedTrigeminy}
+\end{figure}
+
+5. Com as janelas dos sinais separados em objeto de vetores, realiza-se a decomposição de cada sinal janelado em componentes de frequência variantes no tempo com Transformada \textit{Wavelet} Discreta de Sobreposição Máxima (MODWT) e Transformada \textit{Wavelet} Discreta Inversa de Sobreposição Máxima (IMODWT) na escala 3 - funções disponíveis através do \textit{Wavelet Toolbox} do \textit{software MATLAB}.
+
+6. Após a extração do sinal modulado e filtrado com \textit{Transformada Wavelet Discreta}, realiza-se a extração da amplitude e tempo dos picos do sinal janelado através da função \textbf{findpeaks} do \textit{Signal Processing Toolbox}.
+
+7. Após a extração dos picos em um objeto de vetores, realiza-se a plotagem de cada sinal com seus respectivos pontos de pico, exceto para casos sem arritmia (N). Uma extração dos picos do arquivo 201m pode ser visualizada na Figura \ref{signalPeaksExtractedTrigeminy}, onde foi extraída a arritmia Trigeminismo Ventricular.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/signalPeaksExtractedTrigeminy}
+	\caption{Picos de Trigeminismo Ventricular extraídos do arquivo 201m.}
+	\label{signalPeaksExtractedTrigeminy}
+\end{figure}
+
+8. Com os dados de amplitude e tempo extraídos em um objeto de vetores, realiza-se a extração de características, capturando o valor de amplitude do último pico do sinal, a diferença de tempo R-R entre o último e o primeiro pico (o pico do meio não se caracteriza como pico R) e a velocidade do pico da onda R (divisão entre a amplitude do pico e o período de tempo R-R).
+
+9. Para finalizar o processo de extração, combinam-se as três características extraídas anteriormente com características informativas sobre o paciente, obtidas por meio de cada cabeçalho da amostra: sexo, idade e aplicação de remédios. Quando combinados, é realizada a extração desse conjunto de seis características junto ao tipo da arritmia em um arquivo \textit{CSV}, populando cada linha do arquivo com cada período de amostra encontrado para a arritmia escolhida.
+
+Essas etapas apresentadas foram executadas para cada um dos 17 arquivos e para todas as arritmias, além do arquivo 100m para extração de características de um sinal saudável (N). Após a extração de todos os \textit{CSVs}, as características das arritmias foram organizadas em um só arquivo, o qual foi utilizado para cada classificador de treinamento no aprendizado de máquina. Um pedaço do arquivo \textit{CSV} extraído com cada amostras de cada tipo de arritmia pode ser visualizado na Figura \ref{featuresExtractedCSVExample}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/featuresExtractedCSVExample}
+	\caption{Arquivo de características extraído entre todas as amostras e com todas classes de arritmia.}
+	\label{featuresExtractedCSVExample}
+\end{figure}
+
+\section{Treinamento com Aprendizado de Máquina}
+
+Após a etapa de extração de características, foi obtido um arquivo \textit{CSV} com 205 amostras contendo três tipos de classes de arritmia: Bigeminismo Ventricular, Trigeminismo Ventricular e Taquicardia Ventricular. Para realizar o treinamento no conjunto de dados obtidos, foi utilizado o \textit{split} de treinamento 80/20 com 158 amostras no \textit{software} \textit{WEKA} na aba \textit{Classifiers}, enquanto no \textit{MATLAB} o treinamento foi realizado por meio da \textit{Toolbox Classification Learning}. 
+
+Para o \textit{WEKA} foi necessário realizar a conversão do arquivo \textit{CSV} com os dados normalizados para o formato \textit{ARFF}, permitindo a execução de leituras das amostras de forma categorizada pelo \textit{software} em questão. O arquivo \textit{ARFF} é formado por um cabeçalho, o qual deve declarar as variáveis que cada amostra irá apresentar com seu respectivo tipo. As amostras são colocadas logo abaixo desse cabeçalho, com variáveis separadas por vírgula - representado pela Figura \ref{wekaArquive}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/featuresExtractedArffExample.png}
+	\caption{Cabeçalho do arquivo \textit{ARFF} criado para o treinamento com amostras.}
+	\label{wekaArquive}
+\end{figure}
+
+Com o arquivo \textit{ARFF} criado, foi necessário carregar o arquivo e escolher o classificador supervisionado desejado para realização do treinamento. Para este trabalho foram executadas duas etapas: execução por 10x as amostras de treinamento (correspondentes a 80\% do total) para depois executar apenas uma vez \textit{set} de teste. Os classificadores utilizados no \textit{WEKA} foram: J48 e \textit{Random Forest} de Árvores de Decisão; \textit{IBk} para Vizinhos mais Próximos; NaiveBayes e \textit{Bayes Net} para Redes Bayesianas; \textit{Multilayer Perceptron} para Redes Neurais.
+
+Para o \textit{software MATLAB}, por sua vez, foi necessário converter o arquivo CSV para matrizes. Com os dados devidamente importados, torna-se necessário determinar qual classe será responsável pela classificação (\textit{response}), enquanto as demais são determinadas como predições (\textit{prediction}) - a escolha entre \textit{prediction} e \textit{response} é demonstrada pela Figura \ref{matlabClassificationLearningPannel}. Para fins de teste existe a opção de não acrescentar uma classe, determinando a mesma como não importante (\textit{do not important}). Com a janela padrão do classificador aberta pode-se escolher um tipo de classificador e alterar seus parâmetros, ou até mesmo escolher um dos classificadores pré-definidos. No total são 5 tipos de classificadores e os mesmos podem ter seus parâmetros alterados, chegando a um total de 22 classificadores pré-definidos.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/matlabClassificationLearningPannel.png}
+	\caption{Janela de nova sessão com escolha entre predições e classificação na Classification Learning Toolbox do MATLAB.}
+	\label{matlabClassificationLearningPannel}
+\end{figure}
+
+A \textit{toolbox} tem a opção de executar todos os classificadores de uma só vez, representada pela Figura \ref{exemploExecucaoClassificadoresMATLAB}, podendo demandar um tempo maior para uma grande quantidade de dados. Recomenda-se usar a função de paralelismo, permitindo com que mais de um classificador seja executado por vez. Para esse trabalho todos os classificadores foram executados, resultando na análise dos seguintes: \textit{Complex}, \textit{Medium} e \textit{Simple Trees} de Árvores de Decisão; \textit{Fine}, \textit{Medium}, \textit{Coarse}, \textit{Cosine}, \textit{Cubic} e \textit{Weighted KNN} para Vizinhos mais Próximos; \textit{Linear}, \textit{Quadratic}, \textit{Cubic}, \textit{Fine/Medium/Coarse Gaussian} para SVMs; Boosted, Bagged Trees e Subspace Discriminant para \textit{Ensembles} de Classificadores.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=4in]{img/exemploExecucaoClassificadoresMATLAB.png}
+	\caption{Resultados da execução de um exemplo com todos classificadores na Classification Learning Toolbox do MATLAB.}
+	\label{exemploExecucaoClassificadoresMATLAB}
+\end{figure}
+
+A partir da classificação realizada pelo aprendizado de máquina dos dois \textit{softwares} em questão, pode-se obter resultados para Árvores de Decisão, Vizinhos mais Próximos, SVMs, \textit{Ensembles} de Classificadores, Redes Bayesianas e Redes Neurais. Os resultados obtidos para treinamento e teste de acurácia estão representados, respectivamente, através das Tabelas \ref{table:tabelaResultadosGeralArvoresDecisao} a \ref{table:tabelaResultadosGeralRedesNeurais}, enquanto os períodos de execução através das Tabelas \ref{table:tabelaResultadosPeriodosGeralArvoresDecisao} a \ref{table:tabelaResultadosPeriodosGeralRedesNeurais}. Os resultados de acurácia individuais por classes, por sua vez, podem ser visualizados pelas Tabelas \ref{table:tabelaResultadosIndividuaisArvoresDecisao} a \ref{table:tabelaResultadosIndividuaisRedesNeurais}. Esses valores foram obtidos através das acurácias gerais apresentadas nos \textit{logs} de cada \textit{software}, além das matrizes de confusão de cada execução, as quais exemplos das mesmas podem ser representadas pelas Figuras \ref{wekaRandomForestTrainingResults8020} do \textit{WEKA} para \textit{RandomForest} e \ref{matlabMediumGaussianSVMTrainingResults8020} do \textit{MATLAB} para \textit{Medium Gaussian SVM}. As matrizes de confusão restantes podem ser visualizadas no repositório aberto do \textit{Github} \cite{kawasaki:17}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando Algoritmos de Árvores de Decisão}
+	\label{table:tabelaResultadosGeralArvoresDecisao}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{J48}} & \textbf{\textit{RandomForest}} & \textbf{\textit{ComplexTrees}} & \textbf{\textit{MediumTrees}} & \textbf{\textit{SimpleTrees}}\\
+		\hline
+		TREIN & 88.61\% & \textbf{91.71\%} & 82.90\% & 82.90\% & 85.40\% \\		
+		\hline
+		DESVP & 0 & 11.22 & 0 & 0 & 0 \\		
+		\hline
+		TESTE & 89.36\% & 76.60\% & \textbf{91.50\%} & \textbf{91.50\%} & \textbf{91.50\%} \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando Vizinhos Mais Próximos}
+	\label{table:tabelaResultadosGeralVizinhosMaisProximos}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} & \multicolumn{6}{|c|}{\textbf{\textit{MATLAB - KNN}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{IBk}} & \textbf{\textit{Fine}} & \textbf{\textit{Medium}} & \textbf{\textit{Coarse}} & \textbf{\textit{Cosine}} & 
+		\textbf{\textit{Cubic}} &
+		\textbf{\textit{Weighted}}\\
+		\hline
+		TREIN & \textbf{88.48\%} & 86.70\% & 84.20\% & 55.70\% & 85.40\% & 84.80\% & 86.10\% \\		
+		\hline
+		DESVP & 4.46 & 0 & 0 & 0 & 0 & 0 & 0 \\		
+		\hline
+		TESTE & 91.49\% & \textbf{95.70\%} & 85.10\% & 21.30\% & 87.20\% & 83.00\% & 93.60\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando SVMs}
+	\label{table:tabelaResultadosGeralSVMs}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - SVM}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - Gaussian SVM}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Linear}} & \textbf{\textit{Quadratic}} & \textbf{\textit{Cubic}} & \textbf{\textit{Fine}} &
+		\textbf{\textit{Medium}} & \textbf{\textit{Coarse}} \\
+		\hline
+		TREIN & 84.80\% & 85.40\% & 82.90\% & 79.70\% & \textbf{88.80\%} & 84.80\% \\
+		\hline
+		DESVP & 0 & 0 & 0 & 0 & 0 & 0 \\		
+		\hline
+		TESTE & 95.70\% & \textbf{97.90\%} & \textbf{97.90\%} & 91.50\% & 95.70\% & 83.0\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando Ensembles de Classificadores}
+	\label{table:tabelaResultadosGeralEnsemblesClassificadores}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{MATLAB - Trees}}} & \textbf{\textit{MATLAB - Discriminant}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Boosted}} & \textbf{\textit{Bagged}} & \textbf{\textit{Subspace}} \\
+		\hline
+		TREIN & 35.40\% & \textbf{86.70\%} & 82.30\% \\
+		\hline
+		DESVP & 0 & 0.903 & 0.581 \\		
+		\hline
+		TESTE & 21.30\% & \textbf{95.70\%} & 91.50\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando Redes Bayesianas}
+	\label{table:tabelaResultadosGeralRedesBayesianas}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{NB}} & \textbf{\textit{BayesNet}} \\
+		\hline
+		TREIN & 84.81\% & \textbf{90.13\%} \\
+		\hline
+		DESVP & 0 & 0.44 \\		
+		\hline
+		TESTE & 74.47\% & \textbf{87.23\%} \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácia Média para Treinamento e Teste Utilizando Redes Neurais}
+	\label{table:tabelaResultadosGeralRedesNeurais}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{MLP}} \\
+		\hline
+		TREIN & \textbf{89.24\%} \\
+		\hline
+		DESVP & 0 \\		
+		\hline
+		TESTE & \textbf{89.36\%} \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando Algoritmos de Árvores de Decisão}
+	\label{table:tabelaResultadosPeriodosGeralArvoresDecisao}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{J48}} & \textbf{\textit{RandomForest}} & \textbf{\textit{ComplexTrees}} & \textbf{\textit{MediumTrees}} & \textbf{\textit{SimpleTrees}}\\
+		\hline
+		TREIN & \textbf{0.01s} & 0.06s & 2.08s & 1.11s & 0.90s \\		
+		\hline
+		TESTE & \textbf{0.01s} & 0.02s & 1.46s & 0.73s & 1.98s \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando Vizinhos Mais Próximos}
+	\label{table:tabelaResultadosPeriodosGeralVizinhosMaisProximos}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} & \multicolumn{6}{|c|}{\textbf{\textit{MATLAB - KNN}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{IBk}} & \textbf{\textit{Fine}} & \textbf{\textit{Medium}} & \textbf{\textit{Coarse}} & \textbf{\textit{Cosine}} & 
+		\textbf{\textit{Cubic}} &
+		\textbf{\textit{Weighted}}\\
+		\hline
+		TREIN & \textbf{0.02s} & 3.26s & 3.32s & 2.71s & 2.91s & 5.42s & 4.96s \\		
+		\hline
+		TESTE & \textbf{0.001s} & 1.93s & 11.04s & 10.18s & 8.36s & 6.01s & 4.09s \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando SVMs}
+	\label{table:tabelaResultadosPeriodosGeralSVMs}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - SVM}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - Gaussian SVM}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Linear}} & \textbf{\textit{Quadratic}} & \textbf{\textit{Cubic}} & \textbf{\textit{Fine}} &
+		\textbf{\textit{Medium}} & \textbf{\textit{Coarse}} \\
+		\hline
+		TREIN & \textbf{2.99s} & 3.32s & 11.0s & 3.30s & 3.21s & 4.19s \\
+		\hline
+		TESTE & 3.17s & 3.05s & \textbf{2.90s} & 15.38s & 14.53s & 12.06s \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando Ensembles de Classificadores}
+	\label{table:tabelaResultadosPeriodosGeralEnsemblesClassificadores}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{MATLAB - Trees}}} & \textbf{\textit{MATLAB - Discriminant}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Boosted}} & \textbf{\textit{Bagged}} & \textbf{\textit{Subspace}} \\
+		\hline
+		TREIN & 4.92s & 7.99s & 7.47s \\
+		\hline
+		TESTE & 20.14s & 19.24s & 17.12s \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando Redes Bayesianas}
+	\label{table:tabelaResultadosPeriodosGeralRedesBayesianas}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{NB}} & \textbf{\textit{BayesNet}} \\
+		\hline
+		TREIN & \textbf{0.01s} & 0.46s \\
+		\hline
+		TESTE & \textbf{0.001s} & 0.39s \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Períodos de Execução Médio para Treinamento e Teste Utilizando Redes Neurais}
+	\label{table:tabelaResultadosPeriodosGeralRedesNeurais}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{MLP}} \\
+		\hline
+		TREIN & \textbf{0.20s} \\
+		\hline
+		TESTE & \textbf{0.27s} \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais utilizando Algoritmos de Árvores de Decisão.}
+	\label{table:tabelaResultadosIndividuaisArvoresDecisao}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{J48}} & \textbf{\textit{RandomForest}} & \textbf{\textit{ComplexTrees}} & \textbf{\textit{MediumTrees}} & \textbf{\textit{SimpleTrees}}\\
+		\hline
+		(B & 97.62\% & \textbf{98.81\%} & 76.19\% & 76.19\% & 90.48\% \\		
+		\hline
+		(N & \textbf{100.0\%} & \textbf{100.0\%} & 97.82\% & 97.82\% & 97.82\% \\		
+		\hline
+		(T & 58.97\% & \textbf{74.87\%} & 61.54\% & 61.54\% & 56.42\% \\		
+		\hline
+		(VT & 96.77\% & 89.68\% & \textbf{96.78\%} & \textbf{96.78\%} & \textbf{96.78\%} \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais utilizando Algoritmos de Vizinhos Mais Próximos.}
+	\label{table:tabelaResultadosIndividuaisVizinhosMaisProximos}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} & \multicolumn{6}{|c|}{\textbf{\textit{MATLAB - KNN}}}\\
+		\hline
+		\textbf{Modo} & \textbf{\textit{IBk}} & \textbf{\textit{Fine}} & \textbf{\textit{Medium}} & \textbf{\textit{Coarse}} & \textbf{\textit{Cosine}} & 
+		\textbf{\textit{Cubic}} &
+		\textbf{\textit{Weighted}}\\
+		\hline
+		(B & 94.29\% & 76.19\% & 92.86\% & \textbf{100.0\%} & 92.86\% & 92.86\% & 85.71\% \\		
+		\hline
+		(N & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} \\		
+		\hline
+		(T & 72.05\% & \textbf{74.35\%} & 64.10\% & 0.0\% & 66.66\% & 64.10\% & 66.66\% \\		
+		\hline
+		(VT & 84.19\% & \textbf{90.32\%} & 77.42\% & 0.0\% & 77.71\% & 77.42\% & 83.87\%\\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais Utilizando Algoritmos de SVMs.}
+	\label{table:tabelaResultadosIndividuaisGeralSVMs}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - SVM}}} & \multicolumn{3}{|c|}{\textbf{\textit{MATLAB - Gaussian SVM}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Linear}} & \textbf{\textit{Quadratic}} & \textbf{\textit{Cubic}} & \textbf{\textit{Fine}} &
+		\textbf{\textit{Medium}} & \textbf{\textit{Coarse}} \\
+		\hline
+		(B & \textbf{97.62\%} & 90.48\% & 88.09\% & 71.43\% & \textbf{97.62\%} & \textbf{97.62\%} \\
+		\hline
+		(N & \textbf{100.0\%} & 97.62\% & 97.82\% & 95.65\% & 97.83\% & \textbf{100.0\%} \\		
+		\hline
+		(T & 58.97\% & \textbf{58.98\%} & \textbf{58.98\%} & 53.84\% & 56.41\% & 56.41\% \\		
+		\hline
+		(VT & 83.87\% & 93.55\% & 96.78\% & \textbf{100.0\%} & \textbf{100.0\%} & 80.64\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais Utilizando Algoritmos de Ensembles de Classificadores.}
+	\label{table:tabelaResultadosIndividuaisEnsemblesClassificadores}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{MATLAB - Trees}}} & \textbf{\textit{MATLAB - Discriminant}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{Boosted}} & \textbf{\textit{Bagged}} & \textbf{\textit{Subspace}} \\
+		\hline
+		(B & 19.04\% & 83.33\% & \textbf{97.61\%} \\
+		\hline
+		(N & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{100.0\%} \\		
+		\hline
+		(T & 15.38\% & \textbf{66.66\%} & 56.41\% \\		
+		\hline
+		(VT & 19.35\% & \textbf{96.77\%} & 67.74\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais Utilizando Algoritmos de Redes Bayesianas.}
+	\label{table:tabelaResultadosIndividuaisRedesBayesianas}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{} & \multicolumn{2}{|c|}{\textbf{\textit{WEKA}}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{NB}} & \textbf{\textit{BayesNet}} \\
+		\hline
+		(B & 83.33\% & \textbf{99.52\%} \\
+		\hline
+		(N & 95.65\% & \textbf{99.78\%} \\		
+		\hline
+		(T & \textbf{61.54\%} & 61.03\% \\		
+		\hline
+		(VT & \textbf{100.0\%} & 99.68\% \\		
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{table}[!h]
+	%% increase table row spacing, adjust to taste
+	\renewcommand{\arraystretch}{1.3}
+	% if using array.sty, it might be a good idea to tweak the value of
+	% \extrarowheight as needed to properly center the text within the cells
+	\caption{Resultados de Acurácias Individuais Utilizando Redes Neurais.}
+	\label{table:tabelaResultadosIndividuaisRedesNeurais}
+	\centering
+	%% Some packages, such as MDW tools, offer better commands for making tables
+	%% than the plain LaTeX2e tabular which is used here.
+	\begin{tabular}{|c|c|}
+		\hline
+		\textbf{} & \textbf{\textit{WEKA}} \\
+		\hline
+		\textbf{Modo} & \textbf{\textit{MLP}} \\
+		\hline
+		(B & \textbf{100.0\%} \\
+		\hline
+		(N & \textbf{100.0\%} \\
+		\hline
+		(T & \textbf{58.97\%} \\
+		\hline
+		(VT & \textbf{96.77\%} \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=5in]{img/wekaRandomForestTrainingResults8020.png}
+	\caption{Resultado da Matriz de Confusão do Treinamento com RandomForest de split 80/20 no software WEKA.}
+	\label{wekaRandomForestTrainingResults8020}
+\end{figure}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=3in]{img/matlabMediumGaussianSVMTrainingResults8020.png}
+	\caption{Resultado da Matriz de Confusão do Treinamento com MediumGaussian SVM de split 80/20 no software MATLAB.}
+	\label{matlabMediumGaussianSVMTrainingResults8020}
+\end{figure}
+
+\clearpage
+
+\section{Resultados e Discussões}
+
+A partir dos resultados obtidos com o aprendizado de máquina, foi possível analisar a eficiência do método de extração de características e dos algoritmos de aprendizado na área de ECG, além de possíveis correções.
+
+Através dos resultados de acurácia média obtidos através das Tabelas \ref{table:tabelaResultadosGeralArvoresDecisao} a \ref{table:tabelaResultadosGeralRedesNeurais} pode-se verificar que os melhores algoritmos de treinamento foram o \textit{RandomForest} e \textit{BayesNet} no \textit{WEKA}, com 91.71\% e 90.13\%. Em teste, por sua vez, os melhores foram \textit{Quadratic SVM}, \textit{Cubic SVM}, \textit{Bagged Trees} e \textit{Fine KNN}, todos do \textit{MATLAB} com respectivamente acurácias de 97.90\%, 97.90\%, 95.70\% e 95.70\%. Considerando resultados médios de cada tipo de algoritmo utilizado em cada classificador, o melhor para treinamento dessa base consistiram em Redes Bayesianas e Árvores de Decisão, com respectivamente 87.47\% e 86.30\% de acurácia média entre todos os algoritmos. Esses classificadores também foram rápidos para obtenção das acurácias, com valores médios de 0.235s e 0.832s, respectivamente.
+
+As acurácias desse trabalho foram inferiores aos dos resultados obtidos no trabalho anterior \cite{kawasakiold:17}, sendo que para \textit{RandomForest} a acurácia obtida havia sido de 98,23\% e para \textit{MultilayerPerceptron} de 95,39\%. Executando a mesma quantidade de amostras do trabalho anterior, com quantidades de batimento de classe normal 72x maior do que as outras amostras de arritmia, verificou-se que as altas acurácias obtidas do trabalho anterior foram justamente sintomas da desproporcionalidade das amostras, onde a grande taxa de acerto da classe (N aumentava o resultado final e, consequentemente, não trazia fidedignidade no aprendizado supervisionado. Sendo assim, esse trabalho tornou-se mais fidedigno na apresentação dos resultados de acurácia, apesar da redução da acurácia média de cada classificador.
+
+Essa reflexão pode ser comprovada por meio ds resultados de acurácia individuais por classes, visualizados pelas Tabelas \ref{table:tabelaResultadosIndividuaisArvoresDecisao} a \ref{table:tabelaResultadosIndividuaisRedesNeurais}. A taxa de acurácia obtida para a classe normal (sem arritmia) foi quase sempre absoluta, e pode influenciar os resultados. Em contraposição, a classe de Trigeminismo Ventricular foi a que obteve menores acurácias, sendo que a melhor acurácia foi de 74.87\% utilizando \textit{RandomForest} do \textit{WEKA}. Isso pode ser explicado pela baixa eficácia na extração de valores que caracterizem o Trigeminismo, e que podem ser melhorados por uma extração mais complexa e detalhada.
+
+Por fim, as Tabelas \ref{table:tabelaResultadosIndividuaisArvoresDecisao} a \ref{table:tabelaResultadosIndividuaisRedesNeurais} apresentam quais classificadores e algoritmos podem representar de forma eficaz cada tipo de arritmia. O Bigeminismo, por exemplo, foi a classe que teve melhores resultados de acurácia, sendo que os algoritmos que obtiveram maiores quantidades de acerto nessa classe foram o \textit{BayesNet} de Redes Bayesianas, \textit{CoarseKNN} de Vizinhos Mais Próximos e o \textit{MLP} de Redes Neurais, com porcentagens de 99.52\%, 100.0\% e 100.0\%, respectivamente. No Trigeminismo, classe que obteve os piores resultados, os melhores algoritmos foram \textit{RandomForest} e \textit{FineKNN}, com respectivamente 74.87\% e 74.35\%. Por fim, no caso da Taquicardia Ventricular a classificação obteve altas porcentagens, sendo que os melhores algoritmos alcançaram 100\%: \textit{Fine Gaussian SVM} e \textit{Medium Gaussian SVM} do \textit{MATLAB}, \textit{NB} do \textit{WEKA}. Com isso, pode-se verificar que os melhores classificadores para essa base de dados, considerando todas as acurácias de cada classe, foram os de Árvores de Decisão, de SVMs e de Redes Bayesianas, além de uma leve consideração para Redes Neurais se não considerar a arritmia de Trigeminismo - a qual obteve uma baixa acurácia de 58.97\%.
+
+\section{Conclusão}
+
+O tratamento de pacientes tem sido uma preocupação global, onde cada vez mais pessoas precisam ser diagnosticadas por uma porcentagem pequena de médicos extremamente ocupados. Sendo assim, métodos automáticos de diagnósticos têm sido desenvolvidos para auxiliar profissionais da saúde, principalmente em áreas que ainda não foram totalmente "convertidas" para o meio digital.
+
+Nesse contexto, uma das áreas que tem evoluído com vários trabalhos e artigos consiste em exames cardiológicos \cite{beckert:09}  \cite{barrella:14} \cite{manzan:06}, que normalmente são manuais e ainda analógicos, dependentes da avaliação final de um profissional médico.
+
+O objetivo desse trabalho, portanto, foi contribuir no diagnóstico automático e digital de arritmias em um exame de ECG, auxiliando o processo decisório de um profissional de cardiologia. Por meio da extração de características cardíacas de sinais específicos, foi possível realizar o aprendizado de máquina, conseguindo treinar uma inteligência artificial para identificação de três arritmias baseado nas características disponibilizadas.
+
+Conforme apresentado no tópico anterior, a extração e treinamento conseguiram apresentar resultados satisfatórios, principalmente para os classificadores de Árvores e Redes Bayesianas. O trabalho, portanto, apresentou uma alternativa rápida e inicial para um diagnóstico cardíaco. Contudo, alguns pontos podem ter comprometido o trabalho, e podem contribuir para trabalhos futuros:
+
+1. A falta de quantidade de amostras de arritmias influenciou no resultado, principalmente pela falta de amostras das arritmias na base do MIT-BIH. Essa base pode ser aprimorada, contendo uma maior quantidade de sinais com mais ocorrências de arritmias, ou também pode ser realizada uma pesquisa e organização de outras bases.
+
+2. A estratégia de extração do complexo QRS por janelamento comprometeu relativamente a qualidade da acurácia do treinamento, dado que nesse trabalho não foram identificados os diferentes tipos de onda de um batimento de ECG. Ou seja, para trabalhos futuros uma extração das ondas P, QRS, T podem melhorar a qualidade do trabalho, assim como conseguir identificar outros tipos de arritmias - como o caso da Fibrilação Atrial, que ocorre na despolarização atrial da onda P.
+
+3. A estratégia de coleta dos picos precisa ser aprimorada, dado que cada tipo de arritmia pode caracterizar uma quantidade de picos diferentes, ou até picos falsos que podem comprometer a extração adequada para treinamento. Isso refletiu na baixa acurácia das amostras de Trigeminismo Ventricular, com valores entre 15.38\% em \textit{Ensembles} de Classificadores e 74.87\% máximo em Árvores de Decisão.
+
+4. A quantidade de características cardíacas extraídas para treinamento melhorou a eficácia dos testes, porém o que ocasionou uma maior fidedignidade nos resultados de acurácia foi a proporção equivalente de amostras correspondentes a cada classe. Mesmo assim, um possível aprimoramento poderia ser a extração de outras características, podendo ser consequência da melhoria da extração de cada uma das ondas P, Q, R e S.
+
+Por fim, esse trabalho foi importante para contribuir ainda mais com o conhecimento médico digital, oferecendo uma solução alternativa para uma evolução de diagnósticos cardiológicos.
+
+% conference papers do not normally have an appendix
+
+
+% use section* for acknowledgment
+\section*{Agradecimentos}
+
+Os autores gostariam de agradecer à professora Priscila Tiemi Maeda Saito pela supervisão e orientação na elaboração desse projeto.
+
+\bibliographystyle{sbc}
+\bibliography{sbc-template}
+
+\end{document}
